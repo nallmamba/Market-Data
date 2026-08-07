@@ -338,6 +338,7 @@
     "eurusd/eurusd_2026_04.json",
     "eurusd/eurusd_2026_05.json",
     "eurusd/eurusd_2026_06.json",
+    "gbpjpy/gbpjpy_2014_01.json",
     "gbpusd/gbpusd_2021_01.json",
     "gbpusd/gbpusd_2021_02.json",
     "gbpusd/gbpusd_2021_03.json",
@@ -855,5 +856,5 @@
     "xauusd/xauusd_2026_05.json",
     "xauusd/xauusd_2026_06.json"
   ],
-  "updatedAt": "2026-08-07T20:37:52.148Z"
+  "updatedAt": "2026-08-07T20:40:44.225Z"
 }
