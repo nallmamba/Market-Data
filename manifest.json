@@ -459,6 +459,7 @@
     "gbpjpy/gbpjpy_2005_07.json",
     "gbpjpy/gbpjpy_2005_08.json",
     "gbpjpy/gbpjpy_2005_09.json",
+    "gbpjpy/gbpjpy_2005_10.json",
     "gbpjpy/gbpjpy_2014_01.json",
     "gbpjpy/gbpjpy_2014_02.json",
     "gbpjpy/gbpjpy_2014_03.json",
@@ -1057,5 +1058,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T17:25:45.174Z"
+  "updatedAt": "2026-08-08T17:25:52.402Z"
 }
