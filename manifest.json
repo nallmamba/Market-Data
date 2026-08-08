@@ -14,6 +14,7 @@
     "audusd/audusd_2002_01.json",
     "audusd/audusd_2002_02.json",
     "audusd/audusd_2002_03.json",
+    "audusd/audusd_2002_04.json",
     "audusd/audusd_2017_01.json",
     "audusd/audusd_2017_02.json",
     "audusd/audusd_2017_03.json",
@@ -1129,5 +1130,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T18:22:36.784Z"
+  "updatedAt": "2026-08-08T18:22:41.753Z"
 }
