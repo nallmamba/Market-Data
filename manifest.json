@@ -1,6 +1,7 @@
 {
   "files": [
     "audusd/audusd_2001_02.json",
+    "audusd/audusd_2001_03.json",
     "audusd/audusd_2017_01.json",
     "audusd/audusd_2017_02.json",
     "audusd/audusd_2017_03.json",
@@ -1116,5 +1117,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T18:21:30.250Z"
+  "updatedAt": "2026-08-08T18:21:34.125Z"
 }
