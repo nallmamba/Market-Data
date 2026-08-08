@@ -32,13 +32,19 @@
     "audusd/audusd_2020_06.json",
     "audusd/audusd_2020_07.json",
     "audusd/audusd_2020_10.json",
+    "audusd/audusd_2020_11.json",
+    "audusd/audusd_2021_03.json",
+    "audusd/audusd_2021_08.json",
     "audusd/audusd_2021_10.json",
     "audusd/audusd_2021_11.json",
     "audusd/audusd_2022_02.json",
     "audusd/audusd_2022_03.json",
     "audusd/audusd_2022_04.json",
+    "audusd/audusd_2022_06.json",
     "audusd/audusd_2022_08.json",
+    "audusd/audusd_2022_09.json",
     "audusd/audusd_2022_11.json",
+    "audusd/audusd_2023_01.json",
     "audusd/audusd_2023_04.json",
     "audusd/audusd_2023_07.json",
     "audusd/audusd_2023_09.json",
@@ -54,6 +60,7 @@
     "audusd/audusd_2024_10.json",
     "audusd/audusd_2024_11.json",
     "audusd/audusd_2024_12.json",
+    "audusd/audusd_2025_01.json",
     "audusd/audusd_2025_02.json",
     "audusd/audusd_2025_03.json",
     "audusd/audusd_2025_04.json",
@@ -1108,5 +1115,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T18:12:39.238Z"
+  "updatedAt": "2026-08-08T18:16:32.564Z"
 }
