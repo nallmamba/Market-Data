@@ -30,6 +30,7 @@
     "btcusd/btcusd_2017_08.json",
     "btcusd/btcusd_2017_09.json",
     "btcusd/btcusd_2017_10.json",
+    "btcusd/btcusd_2017_11.json",
     "eurusd/eurusd_2000_05.json",
     "eurusd/eurusd_2000_06.json",
     "eurusd/eurusd_2000_07.json",
@@ -943,5 +944,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T16:22:42.642Z"
+  "updatedAt": "2026-08-08T16:22:48.561Z"
 }
