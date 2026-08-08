@@ -494,6 +494,7 @@
     "usdjpy/usdjpy_2007_02.json",
     "usdjpy/usdjpy_2007_03.json",
     "usdjpy/usdjpy_2007_04.json",
+    "usdjpy/usdjpy_2007_05.json",
     "usdjpy/usdjpy_2009_07.json",
     "usdjpy/usdjpy_2012_01.json",
     "usdjpy/usdjpy_2012_02.json",
@@ -874,5 +875,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T14:32:46.516Z"
+  "updatedAt": "2026-08-08T14:32:52.173Z"
 }
