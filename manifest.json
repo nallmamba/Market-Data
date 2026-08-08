@@ -700,6 +700,7 @@
     "usdchf/usdchf_2021_03.json",
     "usdchf/usdchf_2021_04.json",
     "usdchf/usdchf_2021_05.json",
+    "usdchf/usdchf_2021_06.json",
     "usdchf/usdchf_2022_01.json",
     "usdchf/usdchf_2022_02.json",
     "usdchf/usdchf_2022_03.json",
@@ -1267,5 +1268,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T19:04:47.996Z"
+  "updatedAt": "2026-08-08T19:04:54.181Z"
 }
