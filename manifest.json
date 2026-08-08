@@ -27,6 +27,7 @@
     "audusd/audusd_2020_01.json",
     "audusd/audusd_2020_02.json",
     "audusd/audusd_2020_03.json",
+    "audusd/audusd_2020_04.json",
     "btcusd/btcusd_2017_05.json",
     "btcusd/btcusd_2017_06.json",
     "btcusd/btcusd_2017_07.json",
@@ -1063,5 +1064,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T18:06:24.058Z"
+  "updatedAt": "2026-08-08T18:06:35.493Z"
 }
