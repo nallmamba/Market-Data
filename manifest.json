@@ -696,6 +696,7 @@
     "gbpusd/gbpusd_2026_06.json",
     "gbpusd/gbpusd_2026_07.json",
     "usdchf/usdchf_2021_01.json",
+    "usdchf/usdchf_2021_02.json",
     "usdchf/usdchf_2022_01.json",
     "usdchf/usdchf_2022_02.json",
     "usdchf/usdchf_2022_03.json",
@@ -1263,5 +1264,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-08T19:04:23.100Z"
+  "updatedAt": "2026-08-08T19:04:29.762Z"
 }
