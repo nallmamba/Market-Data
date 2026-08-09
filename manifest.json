@@ -1118,6 +1118,7 @@
     "gbpusd/gbpusd_2009_09.json",
     "gbpusd/gbpusd_2009_10.json",
     "gbpusd/gbpusd_2009_11.json",
+    "gbpusd/gbpusd_2009_12.json",
     "gbpusd/gbpusd_2010_01.json",
     "gbpusd/gbpusd_2010_02.json",
     "gbpusd/gbpusd_2010_03.json",
@@ -2460,5 +2461,5 @@
     "xauusd/xauusd_2026_06.json",
     "xauusd/xauusd_2026_07.json"
   ],
-  "updatedAt": "2026-08-09T07:13:08.149Z"
+  "updatedAt": "2026-08-09T09:30:11.498Z"
 }
