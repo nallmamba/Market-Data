@@ -1,0 +1,106 @@
+# Lives in the Market-Data repo at .github/workflows/ctrader-market-data-sync.yml
+#
+# THREE ways it runs (all execute scripts/ctrader_market_data_sync.py):
+#   nightly   cron 02:00 UTC  - fill gaps, finalize ended months, top up the current month
+#                               for "live" instruments, drain the replay queue.
+#   audit     cron 04:00 UTC on the 2nd of each month - nightly work + damage scan of every
+#                               past month file (full checkout), re-pulls damaged months.
+#   ondemand  repository_dispatch "replay-pull" (sent by the Cloudflare Worker after it writes
+#                               a queue/*.json request) - only the requested instruments.
+# Manual: Actions tab > Run workflow > pick a mode.
+#
+# SECRETS (Settings > Secrets and variables > Actions):
+#   CTRADER_CLIENT_ID, CTRADER_CLIENT_SECRET, CTRADER_ACCOUNT_ID, CTRADER_REFRESH_TOKEN,
+#   SECRETS_PAT  (fine-grained PAT, this repo only, "Secrets: read and write" - used to save the
+#                 rotated cTrader refresh token back, because cTrader invalidates the old one).
+# OPTIONAL repository VARIABLES (Settings > ... > Variables): SYMBOL_ALIASES, CURRENT_MONTH_INSTRUMENTS,
+#   ALLOW_NEW_INSTRUMENTS, LIVE_RETENTION_DAYS - see ctrader_market_data_sync.py.
+
+name: cTrader Market Data Sync
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # nightly
+    - cron: "0 4 2 * *"   # monthly audit
+  repository_dispatch:
+    types: [replay-pull]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        type: choice
+        options: [nightly, ondemand, audit]
+        default: nightly
+
+permissions:
+  contents: write # lets GITHUB_TOKEN commit the data files
+
+# One run at a time. GitHub keeps only ONE waiting run per group (newer waiting runs replace older
+# ones), which is fine: requests live in queue/*.json in the repo, and whichever run starts next
+# drains ALL of them.
+concurrency:
+  group: ctrader-market-data-sync
+  cancel-in-progress: false
+
+env:
+  SYNC_MODE: >-
+    ${{ github.event_name == 'repository_dispatch' && 'ondemand' ||
+        github.event_name == 'workflow_dispatch' && inputs.mode ||
+        github.event.schedule == '0 4 2 * *' && 'audit' || 'nightly' }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out scripts only
+        if: env.SYNC_MODE != 'audit'
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts
+            requirements.txt
+
+      - name: Check out everything (audit reads every month file)
+        if: env.SYNC_MODE == 'audit'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pynacl
+
+      - name: Run market data sync
+        working-directory: scripts
+        env:
+          GITHUB_DATA_OWNER: ${{ github.repository_owner }}
+          GITHUB_DATA_REPO: ${{ github.event.repository.name || 'Market-Data' }}
+          GITHUB_DATA_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DATA_DIR: ${{ env.SYNC_MODE == 'audit' && github.workspace || '' }}
+          CTRADER_CLIENT_ID: ${{ secrets.CTRADER_CLIENT_ID }}
+          CTRADER_CLIENT_SECRET: ${{ secrets.CTRADER_CLIENT_SECRET }}
+          CTRADER_ACCOUNT_ID: ${{ secrets.CTRADER_ACCOUNT_ID }}
+          CTRADER_REFRESH_TOKEN: ${{ secrets.CTRADER_REFRESH_TOKEN }}
+          SYMBOL_ALIASES: ${{ vars.SYMBOL_ALIASES || '{}' }}
+          CURRENT_MONTH_INSTRUMENTS: ${{ vars.CURRENT_MONTH_INSTRUMENTS }}
+          ALLOW_NEW_INSTRUMENTS: ${{ vars.ALLOW_NEW_INSTRUMENTS }}
+          LIVE_RETENTION_DAYS: ${{ vars.LIVE_RETENTION_DAYS || '45' }}
+        run: python ctrader_market_data_sync.py
+
+      # Always runs, even if the sync failed after refreshing the token -
+      # the old refresh token is already dead by then.
+      - name: Save rotated refresh token
+        if: always()
+        working-directory: scripts
+        env:
+          SECRETS_PAT: ${{ secrets.SECRETS_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          CTRADER_REFRESH_TOKEN: ${{ secrets.CTRADER_REFRESH_TOKEN }}
+        run: python ctrader_rotate_secret.py
