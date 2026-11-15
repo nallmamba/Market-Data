@@ -5,6 +5,8 @@
 #                               for "live" instruments, drain the replay queue.
 #   audit     cron 04:00 UTC on the 2nd of each month - nightly work + damage scan of every
 #                               past month file (full checkout), re-pulls damaged months.
+#   inventory workflow_dispatch only - list demo-account symbols; makes no candle requests
+#                               and does not commit market-data changes.
 #   ondemand  repository_dispatch "replay-pull" (sent by the Cloudflare Worker after it writes
 #                               a queue/*.json request) - only the requested instruments.
 # Manual: Actions tab > Run workflow > pick a mode.
@@ -14,7 +16,7 @@
 #   SECRETS_PAT  (fine-grained PAT, this repo only, "Secrets: read and write" - used to save the
 #                 rotated cTrader refresh token back, because cTrader invalidates the old one).
 # OPTIONAL repository VARIABLES (Settings > ... > Variables): SYMBOL_ALIASES, CURRENT_MONTH_INSTRUMENTS,
-#   ALLOW_NEW_INSTRUMENTS, LIVE_RETENTION_DAYS - see ctrader_market_data_sync.py.
+#   ALLOW_NEW_INSTRUMENTS, LIVE_RETENTION_DAYS, MAX_BACKFILL_MONTHS_PER_RUN, MAX_GAP_MONTHS_PER_RUN.
 
 name: cTrader Market Data Sync
 
@@ -29,7 +31,7 @@ on:
       mode:
         description: "Run mode"
         type: choice
-        options: [nightly, ondemand, audit]
+        options: [nightly, ondemand, audit, inventory]
         default: nightly
 
 permissions:
@@ -92,6 +94,8 @@ jobs:
           CURRENT_MONTH_INSTRUMENTS: ${{ vars.CURRENT_MONTH_INSTRUMENTS }}
           ALLOW_NEW_INSTRUMENTS: ${{ vars.ALLOW_NEW_INSTRUMENTS }}
           LIVE_RETENTION_DAYS: ${{ vars.LIVE_RETENTION_DAYS || '45' }}
+          MAX_BACKFILL_MONTHS_PER_RUN: ${{ vars.MAX_BACKFILL_MONTHS_PER_RUN || '6' }}
+          MAX_GAP_MONTHS_PER_RUN: ${{ vars.MAX_GAP_MONTHS_PER_RUN || '24' }}
         run: python ctrader_market_data_sync.py
 
       # Always runs, even if the sync failed after refreshing the token -
