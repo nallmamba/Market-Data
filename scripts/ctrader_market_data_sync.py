@@ -9,12 +9,14 @@ SYNC_MODE (env):
   ondemand  only the instruments in the replay queue (started by the Cloudflare Worker).
   audit     nightly + a damage scan of every past month file (needs DATA_DIR = a
             full checkout of the data repo).
+  inventory list demo-account symbols only; no candle requests or market-data commit.
 
 REQUIRED ENV: GITHUB_DATA_OWNER, GITHUB_DATA_REPO, GITHUB_TOKEN, CTRADER_ACCOUNT_ID,
               CTRADER_REFRESH_TOKEN (+ CTRADER_CLIENT_ID/SECRET, read by ctrader_auth.py).
 OPTIONAL ENV: GITHUB_DATA_BRANCH (main), DATA_DIR, SYMBOL_ALIASES (JSON, e.g.
               {"us30":"US30Cash"}), CURRENT_MONTH_INSTRUMENTS (comma list always kept live),
-              ALLOW_NEW_INSTRUMENTS (1/0), LIVE_RETENTION_DAYS (45), MAX_WAIT_SECONDS (420).
+              ALLOW_NEW_INSTRUMENTS (1/0), LIVE_RETENTION_DAYS (45), MAX_WAIT_SECONDS (420),
+              MAX_BACKFILL_MONTHS_PER_RUN (6), MAX_GAP_MONTHS_PER_RUN (24).
 
 ONE-TIME SETUP: see README.md (the first login is done by hand once to get a refresh token;
 the workflow then saves each rotated token back into the CTRADER_REFRESH_TOKEN secret).
@@ -36,6 +38,7 @@ from ctrader_market_data_committer import commit_files_and_update_manifest, fetc
 from ctrader_market_data_current import drop_forming_bar
 from ctrader_market_data_gaps import parse_manifest_files
 from ctrader_market_data_puller import build_symbol_lookup
+from ctrader_market_data_symbols import apply_common_symbol_aliases, format_symbol_inventory
 from ctrader_market_data_repoio import STATE_PATH, read_json, read_queue, read_state
 from ctrader_market_data_runner import run
 
@@ -84,7 +87,7 @@ def _wait_for_queue(queue, max_wait):
 
 def main():
     mode = os.environ.get("SYNC_MODE", "nightly").strip().lower()
-    if mode not in ("nightly", "ondemand", "audit"):
+    if mode not in ("nightly", "ondemand", "audit", "inventory"):
         raise SystemExit(f"Unknown SYNC_MODE {mode!r}")
     owner = _required_env("GITHUB_DATA_OWNER")
     repo = _required_env("GITHUB_DATA_REPO")
@@ -111,15 +114,38 @@ def main():
 
     require_demo_account(session, account_id)
     symbol_map = build_symbol_map(session, account_id)
+    if mode == "inventory":
+        names = format_symbol_inventory(symbol_map)
+        print(f"cTrader demo symbols ({len(names)}):")
+        for name in names:
+            print(f"  {name}")
+        return
+
     lookup = build_symbol_lookup(symbol_map)
-    for code, broker_name in json.loads(os.environ.get("SYMBOL_ALIASES", "{}")).items():
+    resolved_aliases, ambiguous_aliases = apply_common_symbol_aliases(lookup)
+    for code, broker_name in resolved_aliases.items():
+        print(f"  Auto-mapped {code} to cTrader symbol {broker_name!r}.")
+    for code, broker_names in ambiguous_aliases.items():
+        print(f"  Ambiguous cTrader symbols for {code}: {', '.join(broker_names)}. Configure SYMBOL_ALIASES.")
+    for code, broker_name in json.loads(os.environ.get("SYMBOL_ALIASES", "{}" )).items():
         if broker_name.lower() in lookup:
             lookup[code.lower()] = lookup[broker_name.lower()]
         else:
             print(f"  Warning: alias {code!r} -> {broker_name!r}: broker has no such symbol.")
 
     forced = tuple(c.strip().lower() for c in os.environ.get("CURRENT_MONTH_INSTRUMENTS", "").split(",") if c.strip())
-    wanted = set(parse_manifest_files(existing_files)) | set(forced) | {str(q.get("instrument", "")).lower() for q in queue}
+    state_backfills = state.get("backfills") or {}
+    active_backfills = {
+        str(instrument).lower()
+        for instrument, backfill in state_backfills.items()
+        if isinstance(backfill, dict) and backfill.get("status") == "pending"
+    }
+    wanted = (
+        set(parse_manifest_files(existing_files))
+        | set(forced)
+        | active_backfills
+        | {str(q.get("instrument", "")).lower() for q in queue}
+    )
     ids = [lookup[c] for c in wanted if c in lookup]
     digits = fetch_symbol_digits(session, account_id, ids)
 
@@ -140,6 +166,8 @@ def main():
     config = {
         "allow_new_instruments": _flag("ALLOW_NEW_INSTRUMENTS"),
         "live_retention_days": int(os.environ.get("LIVE_RETENTION_DAYS", "45")),
+        "max_backfill_months_per_run": int(os.environ.get("MAX_BACKFILL_MONTHS_PER_RUN", "6")),
+        "max_gap_months_per_run": int(os.environ.get("MAX_GAP_MONTHS_PER_RUN", "24")),
         "forced_live": forced,
     }
     result = run(mode, datetime.now(timezone.utc), existing_files, state, queue,
@@ -162,7 +190,7 @@ def main():
 
 def _norm(state):
     out = dict(state or {})
-    for key in ("live", "partial", "audit", "unknown"):
+    for key in ("live", "partial", "audit", "unknown", "backfills"):
         out[key] = dict(out.get(key) or {})
     return out
 
