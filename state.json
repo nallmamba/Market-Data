@@ -1,12 +1,12 @@
 {
  "audit": {},
  "live": {
-  "eurusd": 1794721982
+  "eurusd": 1794722254
  },
  "partial": {
   "eurusd/eurusd_2026_11.json": {
    "through": 1794605340,
-   "updatedAt": 1794721982
+   "updatedAt": 1794722254
   }
  },
  "unknown": {}
