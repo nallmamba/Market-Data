@@ -29,15 +29,15 @@ STATE (state.json in the data repo, committed with the data)
 QUEUE REQUESTS  {id, instrument, needUntil (UTC epoch s), requestedAt}
 A request is removed only once data has been pulled up to needUntil (or it
 is malformed/stale/unknown). Otherwise it stays and the next run retries.
-On-demand runs fill only the requested historical month when needed, not
-every gap in the instrument's full history.
+An explicit `backfillFrom` request starts a separately capped, resumable
+history fill. Other on-demand runs fill only the requested historical month.
 """
 
 import re
 from datetime import datetime, timezone
 
 from ctrader_market_data_current import data_path, merge_bars, plan_range
-from ctrader_market_data_gaps import missing_months_by_instrument, parse_manifest_files, MONTHLY_FILE_PATTERN
+from ctrader_market_data_gaps import last_fully_completed_month, missing_months_by_instrument, parse_manifest_files, MONTHLY_FILE_PATTERN
 from ctrader_market_data_integrity import find_suspects, signature
 from ctrader_market_data_puller import month_bounds_utc
 
@@ -51,8 +51,32 @@ DEFAULT_CONFIG = {
     "max_request_age_days": 3,
     "max_request_future_seconds": 15 * 60,
     "max_requested_at_future_seconds": 5 * 60,
+    "max_backfill_months_per_run": 6,
+    "max_gap_months_per_run": 24,
     "forced_live": (),
 }
+
+BACKFILL_START_RE = re.compile(r"^(\d{4})-(\d{2})-01$")
+
+
+def _parse_backfill_month(value):
+    if not isinstance(value, str):
+        return None
+    match = BACKFILL_START_RE.match(value)
+    if not match:
+        return None
+    year, month = int(match.group(1)), int(match.group(2))
+    if month < 1 or month > 12 or (year, month) < (2020, 1):
+        return None
+    return year, month
+
+
+def _month_string(year, month):
+    return f"{year:04d}-{month:02d}-01"
+
+
+def _next_month(year, month):
+    return (year, month + 1) if month < 12 else (year + 1, 1)
 
 
 def split_path(path):
@@ -68,7 +92,7 @@ def split_path(path):
 
 def _normalise_state(state):
     state = dict(state or {})
-    for key in ("live", "partial", "audit", "unknown"):
+    for key in ("live", "partial", "audit", "unknown", "backfills"):
         state[key] = dict(state.get(key) or {})
     return state
 
@@ -112,6 +136,7 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
 
     # --- 0. read the queue --------------------------------------------------
     req_by_inst = {}
+    live_request_instruments = set()
     for q in queue:
         inst = str(q.get("instrument", "")).lower().strip()
         try:
@@ -120,8 +145,14 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
         except (TypeError, ValueError):
             need = 0
             requested = 0
+        is_backfill = "backfillFrom" in q
+        backfill_start = _parse_backfill_month(q.get("backfillFrom")) if is_backfill else None
         if not INSTRUMENT_RE.match(inst) or need <= 0:
             log(f"  Dropping malformed queue request {q.get('id')}")
+            done_ids.add(q["id"])
+            continue
+        if is_backfill and (backfill_start is None or need < int(datetime(2020, 1, 1, tzinfo=timezone.utc).timestamp())):
+            log(f"  Dropping invalid or pre-2020 backfill request {q.get('id')}")
             done_ids.add(q["id"])
             continue
         if need > now_ts + cfg["max_request_future_seconds"]:
@@ -136,11 +167,11 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
             log(f"  Dropping stale queue request {q.get('id')}")
             done_ids.add(q["id"])
             continue
-        if now_ts - need > cfg["max_request_age_days"] * 86400:
+        if not is_backfill and now_ts - need > cfg["max_request_age_days"] * 86400:
             log(f"  Dropping queue request with stale needUntil {q.get('id')}")
             done_ids.add(q["id"])
             continue
-        if (inst not in known and not cfg["allow_new_instruments"]) or not has_symbol(inst):
+        if (inst not in known and not cfg["allow_new_instruments"] and not is_backfill) or not has_symbol(inst):
             entry = state["unknown"].setdefault(inst, {"count": 0, "last": 0})
             entry["count"] += 1
             entry["last"] = now_ts
@@ -148,20 +179,51 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
             done_ids.add(q["id"])
             continue
         req_by_inst.setdefault(inst, []).append(q)
-        state["live"][inst] = now_ts
+        if need >= now_ts - cfg["live_retention_days"] * 86400:
+            state["live"][inst] = now_ts
+            live_request_instruments.add(inst)
+        if is_backfill:
+            existing_backfill = state["backfills"].get(inst)
+            existing_backfill = existing_backfill if isinstance(existing_backfill, dict) else {}
+            existing_start = _parse_backfill_month(existing_backfill.get("startMonth"))
+            existing_next = _parse_backfill_month(existing_backfill.get("nextMonth"))
+            start_month = min(backfill_start, existing_start) if existing_start else backfill_start
+            next_month = min(backfill_start, existing_next) if existing_next else backfill_start
+            state["backfills"][inst] = {
+                **existing_backfill,
+                "startMonth": _month_string(*start_month),
+                "nextMonth": _month_string(*next_month),
+                "requestedAt": max(now_ts, int(existing_backfill.get("requestedAt", 0) or 0)),
+                "status": "pending",
+                "noDataMonths": list(existing_backfill.get("noDataMonths") or []),
+            }
 
     # --- 1. missing completed months ---------------------------------------
     if mode != "ondemand":
+        gap_budget = max(0, int(cfg["max_gap_months_per_run"]))
         for inst, months in missing_months_by_instrument(existing_files, now.date()).items():
+            backfill = state["backfills"].get(inst, {})
+            if isinstance(backfill, dict) and backfill.get("status") == "pending":
+                continue
+            no_data_months = set(backfill.get("noDataMonths", [])) if isinstance(backfill, dict) else set()
+            months = [month for month in months if _month_string(*month) not in no_data_months]
+            if not months:
+                continue
             if not has_symbol(inst):
                 log(f"  No cTrader symbol for {inst} - skipping its {len(months)} missing month(s).")
                 continue
             for y, m in months:
+                if gap_budget <= 0:
+                    log("  Completed-month gap cap reached; remaining gaps wait for the next run.")
+                    break
+                gap_budget -= 1
                 f, t = month_bounds_utc(y, m)
                 bars = safe_fetch(inst, f, t)
                 if bars:
                     files[data_path(inst, y, m)] = bars
                     log(f"  Filled {data_path(inst, y, m)}: {len(bars)} bars.")
+            if gap_budget <= 0:
+                break
 
     if mode == "ondemand":
         for inst, reqs in req_by_inst.items():
@@ -181,6 +243,55 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
                     if merged and merged != bars:
                         files[path] = merged
                         log(f"  Requested historical month {path}: {len(merged)} bars.")
+
+    # --- 1b. resumable, bounded instrument backfills ----------------------
+    backfill_budget = max(0, int(cfg["max_backfill_months_per_run"]))
+    last_completed = last_fully_completed_month(now.date())
+    backfill_order = sorted(
+        state["backfills"].items(),
+        key=lambda item: (int(item[1].get("requestedAt", 0) or 0), item[0])
+        if isinstance(item[1], dict) else (0, item[0]),
+    )
+    for inst, raw_backfill in backfill_order:
+        if not isinstance(raw_backfill, dict) or raw_backfill.get("status") != "pending":
+            continue
+        if not has_symbol(inst):
+            log(f"  Backfill for {inst} is paused because no cTrader symbol mapping is available.")
+            continue
+        backfill = dict(raw_backfill)
+        cursor = _parse_backfill_month(backfill.get("nextMonth")) or _parse_backfill_month(backfill.get("startMonth"))
+        if cursor is None:
+            log(f"  Backfill for {inst} has an invalid cursor; leaving it paused for review.")
+            continue
+        no_data = set(backfill.get("noDataMonths") or [])
+        while cursor <= last_completed and backfill_budget > 0:
+            year, month = cursor
+            path = data_path(inst, year, month)
+            if path not in existing_files and path not in files and _month_string(year, month) not in no_data:
+                from_dt, to_dt = month_bounds_utc(year, month)
+                bars = safe_fetch(inst, from_dt, to_dt)
+                backfill_budget -= 1
+                if bars is None:
+                    break
+                if bars:
+                    files[path] = bars
+                    log(f"  Backfill pulled {path}: {len(bars)} bars.")
+                else:
+                    no_data.add(_month_string(year, month))
+                    log(f"  Backfill found no bars for {path}; recording the empty month and continuing.")
+            cursor = _next_month(year, month)
+            backfill["nextMonth"] = _month_string(*cursor)
+            backfill["noDataMonths"] = sorted(no_data)
+            state["backfills"][inst] = backfill
+
+        backfill["status"] = "complete" if cursor > last_completed else "pending"
+        backfill["nextMonth"] = _month_string(*cursor)
+        backfill["noDataMonths"] = sorted(no_data)
+        state["backfills"][inst] = backfill
+        if backfill["status"] == "complete":
+            log(f"  Historical backfill for {inst} is complete through {last_completed[0]}-{last_completed[1]:02d}.")
+        elif backfill_budget <= 0:
+            log("  Backfill month cap reached; remaining history will resume in a later run.")
 
     # --- 2. finalize partial months that have now ended --------------------
     partial_paths = [] if mode == "ondemand" else list(state["partial"])
@@ -203,7 +314,7 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
     # --- 3. current-month top-up -------------------------------------------
     live_cutoff = now_ts - cfg["live_retention_days"] * 86400
     if mode == "ondemand":
-        targets = set(req_by_inst)
+        targets = live_request_instruments
     else:
         targets = {i for i, ts in state["live"].items() if ts >= live_cutoff}
         targets |= {i.lower() for i in cfg["forced_live"]}
@@ -211,9 +322,11 @@ def run(mode, now, existing_files, state, queue, read_bars, fetch_bars, has_symb
     state["live"] = {i: ts for i, ts in state["live"].items() if ts >= live_cutoff or i in req_by_inst}
 
     for inst in sorted(targets):
-        if (inst not in known and not cfg["allow_new_instruments"]) or not has_symbol(inst):
+        backfill = state["backfills"].get(inst, {})
+        backfill_is_active = isinstance(backfill, dict) and backfill.get("status") == "pending"
+        if (inst not in known and not cfg["allow_new_instruments"] and not backfill_is_active) or not has_symbol(inst):
             continue
-        if inst not in known:  # brand-new instrument, explicitly allowed: a bounded backfill
+        if inst not in known and cfg["allow_new_instruments"]:  # explicitly allowed: a bounded initial sample
             y, m = cur
             for _ in range(cfg["new_instrument_prior_months"]):
                 y, m = (y - 1, 12) if m == 1 else (y, m - 1)
