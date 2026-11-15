@@ -1,17 +1,55 @@
 {
  "audit": {},
+ "backfills": {
+  "ethusd": {
+   "nextMonth": "2026-11-01",
+   "noDataMonths": [],
+   "requestedAt": 1794759810,
+   "startMonth": "2020-01-01",
+   "status": "complete"
+  },
+  "gbpusd": {
+   "nextMonth": "2026-11-01",
+   "noDataMonths": [],
+   "requestedAt": 1794759810,
+   "startMonth": "2020-01-01",
+   "status": "complete"
+  },
+  "us100": {
+   "nextMonth": "2020-07-01",
+   "noDataMonths": [],
+   "requestedAt": 1794759810,
+   "startMonth": "2020-01-01",
+   "status": "pending"
+  }
+ },
  "live": {
   "btcusd": 1794732390,
-  "eurusd": 1794724325
+  "ethusd": 1794759810,
+  "eurusd": 1794724325,
+  "gbpusd": 1794759810,
+  "us100": 1794759810
  },
  "partial": {
   "btcusd/btcusd_2026_11.json": {
    "through": 1794732300,
    "updatedAt": 1794732390
   },
+  "ethusd/ethusd_2026_11.json": {
+   "through": 1794759720,
+   "updatedAt": 1794759810
+  },
   "eurusd/eurusd_2026_11.json": {
    "through": 1794605340,
    "updatedAt": 1794724325
+  },
+  "gbpusd/gbpusd_2026_11.json": {
+   "through": 1794605340,
+   "updatedAt": 1794759810
+  },
+  "us100/us100_2026_11.json": {
+   "through": 1794607140,
+   "updatedAt": 1794759810
   }
  },
  "unknown": {}

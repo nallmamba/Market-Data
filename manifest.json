@@ -538,6 +538,7 @@
     "ethusd/ethusd_2026_08.json",
     "ethusd/ethusd_2026_09.json",
     "ethusd/ethusd_2026_10.json",
+    "ethusd/ethusd_2026_11.json",
     "eurgbp/eurgbp_2023_01.json",
     "eurgbp/eurgbp_2023_02.json",
     "eurgbp/eurgbp_2023_03.json",
@@ -1515,6 +1516,14 @@
     "gbpusd/gbpusd_2026_08.json",
     "gbpusd/gbpusd_2026_09.json",
     "gbpusd/gbpusd_2026_10.json",
+    "gbpusd/gbpusd_2026_11.json",
+    "us100/us100_2020_01.json",
+    "us100/us100_2020_02.json",
+    "us100/us100_2020_03.json",
+    "us100/us100_2020_04.json",
+    "us100/us100_2020_05.json",
+    "us100/us100_2020_06.json",
+    "us100/us100_2026_11.json",
     "us30/us30_2013_10.json",
     "us30/us30_2013_11.json",
     "us30/us30_2013_12.json",
@@ -2830,5 +2839,5 @@
     "xauusd/xauusd_2026_09.json",
     "xauusd/xauusd_2026_10.json"
   ],
-  "updatedAt": "2026-11-15T08:46:36Z"
+  "updatedAt": "2026-11-15T16:24:09Z"
 }
