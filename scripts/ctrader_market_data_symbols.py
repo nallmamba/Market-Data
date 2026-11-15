@@ -2,7 +2,7 @@
 
 CANONICAL_SYMBOL_CANDIDATES = {
     "us100": (
-        "us100", "nas100", "us100.cash", "nas100.cash", "ustech", "ustech100", "ndx", "ndx100", "nasdaq100",
+        "us100", "nas100", "us100.cash", "nas100.cash", "ustec", "ustech", "ustech100", "ndx", "ndx100", "nasdaq100",
     ),
     "us30": ("us30", "us30.cash", "us30cash", "dj30", "dow30", "wallstreet30"),
     "us500": ("us500", "us500.cash", "us500cash", "sp500", "spx500"),
