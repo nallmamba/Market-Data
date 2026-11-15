@@ -901,6 +901,7 @@
     "eurusd/eurusd_2026_08.json",
     "eurusd/eurusd_2026_09.json",
     "eurusd/eurusd_2026_10.json",
+    "eurusd/eurusd_2026_11.json",
     "gbpjpy/gbpjpy_2002_05.json",
     "gbpjpy/gbpjpy_2002_06.json",
     "gbpjpy/gbpjpy_2002_07.json",
@@ -2828,5 +2829,5 @@
     "xauusd/xauusd_2026_09.json",
     "xauusd/xauusd_2026_10.json"
   ],
-  "updatedAt": "2026-11-15T04:57:33Z"
+  "updatedAt": "2026-11-15T05:53:06Z"
 }
