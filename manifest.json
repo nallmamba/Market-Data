@@ -430,6 +430,7 @@
     "btcusd/btcusd_2026_08.json",
     "btcusd/btcusd_2026_09.json",
     "btcusd/btcusd_2026_10.json",
+    "btcusd/btcusd_2026_11.json",
     "ethusd/ethusd_2017_12.json",
     "ethusd/ethusd_2018_01.json",
     "ethusd/ethusd_2018_02.json",
@@ -2829,5 +2830,5 @@
     "xauusd/xauusd_2026_09.json",
     "xauusd/xauusd_2026_10.json"
   ],
-  "updatedAt": "2026-11-15T05:53:06Z"
+  "updatedAt": "2026-11-15T08:46:36Z"
 }

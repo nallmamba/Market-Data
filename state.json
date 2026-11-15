@@ -1,9 +1,14 @@
 {
  "audit": {},
  "live": {
+  "btcusd": 1794732390,
   "eurusd": 1794724325
  },
  "partial": {
+  "btcusd/btcusd_2026_11.json": {
+   "through": 1794732300,
+   "updatedAt": 1794732390
+  },
   "eurusd/eurusd_2026_11.json": {
    "through": 1794605340,
    "updatedAt": 1794724325
