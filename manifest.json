@@ -1523,6 +1523,12 @@
     "us100/us100_2020_04.json",
     "us100/us100_2020_05.json",
     "us100/us100_2020_06.json",
+    "us100/us100_2020_07.json",
+    "us100/us100_2020_08.json",
+    "us100/us100_2020_09.json",
+    "us100/us100_2020_10.json",
+    "us100/us100_2020_11.json",
+    "us100/us100_2020_12.json",
     "us100/us100_2026_11.json",
     "us30/us30_2013_10.json",
     "us30/us30_2013_11.json",
@@ -1678,6 +1684,9 @@
     "us30/us30_2026_05.json",
     "us30/us30_2026_06.json",
     "us30/us30_2026_07.json",
+    "us30/us30_2026_08.json",
+    "us30/us30_2026_09.json",
+    "us30/us30_2026_10.json",
     "usdcad/usdcad_2000_06.json",
     "usdcad/usdcad_2000_08.json",
     "usdcad/usdcad_2001_01.json",
@@ -2839,5 +2848,5 @@
     "xauusd/xauusd_2026_09.json",
     "xauusd/xauusd_2026_10.json"
   ],
-  "updatedAt": "2026-11-15T16:24:09Z"
+  "updatedAt": "2026-11-16T08:48:59Z"
 }
