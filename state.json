@@ -16,7 +16,7 @@
    "status": "complete"
   },
   "us100": {
-   "nextMonth": "2025-01-01",
+   "nextMonth": "2025-07-01",
    "noDataMonths": [],
    "requestedAt": 1794759810,
    "startMonth": "2020-01-01",
@@ -32,24 +32,24 @@
  },
  "partial": {
   "btcusd/btcusd_2026_11.json": {
-   "through": 1795603380,
-   "updatedAt": 1795603382
+   "through": 1795688040,
+   "updatedAt": 1795688076
   },
   "ethusd/ethusd_2026_11.json": {
-   "through": 1795603380,
-   "updatedAt": 1795603382
+   "through": 1795688040,
+   "updatedAt": 1795688076
   },
   "eurusd/eurusd_2026_11.json": {
-   "through": 1795603380,
-   "updatedAt": 1795603382
+   "through": 1795688040,
+   "updatedAt": 1795688076
   },
   "gbpusd/gbpusd_2026_11.json": {
-   "through": 1795603380,
-   "updatedAt": 1795603382
+   "through": 1795688040,
+   "updatedAt": 1795688076
   },
   "us100/us100_2026_11.json": {
-   "through": 1795603380,
-   "updatedAt": 1795603382
+   "through": 1795688040,
+   "updatedAt": 1795688076
   }
  },
  "unknown": {}
