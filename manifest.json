@@ -1589,6 +1589,12 @@
     "us100/us100_2025_10.json",
     "us100/us100_2025_11.json",
     "us100/us100_2025_12.json",
+    "us100/us100_2026_01.json",
+    "us100/us100_2026_02.json",
+    "us100/us100_2026_03.json",
+    "us100/us100_2026_04.json",
+    "us100/us100_2026_05.json",
+    "us100/us100_2026_06.json",
     "us100/us100_2026_11.json",
     "us30/us30_2013_10.json",
     "us30/us30_2013_11.json",
@@ -2908,5 +2914,5 @@
     "xauusd/xauusd_2026_09.json",
     "xauusd/xauusd_2026_10.json"
   ],
-  "updatedAt": "2026-11-27T10:21:27Z"
+  "updatedAt": "2026-11-28T09:39:47Z"
 }
